@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const tempElement = document.getElementById("temperature");
+            const humidityElement = document.getElementById("humidity");
+
+            function fetchData() {
+                fetch("https://autocal121-default-rtdb.firebaseio.com/data.json?auth=AIzaSyBt5-baBPw86Tx0mk35q80KsmooGDuBsGU")
+                  .then(response => response.json())
+                .then(data => {
+                    console.log("Fetched data:", data);
+
+                    if (data && typeof data === 'object') {
+                        const timestamps = Object.keys(data);
+                        if (timestamps.length > 0) {
+                            const latestTimestamp = timestamps[timestamps.length - 1];
+                            const latestData = data[latestTimestamp];
+                            const sensorData = latestData;
+
+                            if (sensorData && sensorData.temperature !== undefined && sensorData.humidity !== undefined) {
+                                tempElement.textContent = sensorData.temperature;
+                                humidityElement.textContent = sensorData.humidity;
+                            } else {
+                                tempElement.textContent = "No data";
+                                humidityElement.textContent = "No data";
+                            }
+                        } else {
+                            tempElement.textContent = "No data";
+                            humidityElement.textContent = "No data";
+                        }
+                    } else {
+                        tempElement.textContent = "Invalid data";
+                        humidityElement.textContent = "Invalid data";
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    tempElement.textContent = "Error";
+                    humidityElement.textContent = "Error";
+                });
+            }
+
+            // Event handlers for buttons
+            document.getElementById("startButton").addEventListener("click", function() {
+                console.log("Start button clicked");
+                // Call your backend to start sending data
+                fetch('/start');
+            });
+
+            document.getElementById("stopButton").addEventListener("click", function() {
+                console.log("Stop button clicked");
+                // Call your backend to stop sending data
+                fetch('/stop');
+            });
+
+            document.getElementById("readButton").addEventListener("click", function() {
+                console.log("Read button clicked");
+                fetchData();  // Fetch the latest data
+            });
+
+            // Fetch data every 10 seconds
+            setInterval(fetchData, 10000);
+        });
+    </script>
+</head>
+<body>
+    <h1>Sensor Data</h1>
+    <p>Temperature: <span id="temperature">Loading...</span> °C</p>
+    <p>Humidity: <span id="humidity">Loading...</span> %</p>
+
+    <button id="startButton">Start Sending Data</button>
+    <button id="stopButton">Stop Sending Data</button>
+    <button id="readButton">Read Data</button>
+</body>
+</html>
